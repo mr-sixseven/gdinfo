@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>GD Browser Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== DARK MODE APPLE-INSPIRED — FULL WIDTH ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #1c1c1e, #0a0a0c);
+            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #f5f5f7;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        /* ===== APP ===== */
+        .app {
+            width: 100%;
+            min-height: 100vh;
+            padding: 32px 40px 48px;
+        }
+
+        .app-inner {
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .icon-cube {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #0a84ff, #007aff);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 18px -6px rgba(0, 122, 255, 0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
+            flex-shrink: 0;
+        }
+
+        .icon-cube svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+        }
+
+        .title-block {
+            min-width: 0;
+        }
+
+        .title-block h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .title-block .sub {
+            font-size: 14px;
+            font-weight: 400;
+            color: #98989d;
+            letter-spacing: -0.01em;
+            margin-top: 2px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: #f5f5f7;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #30d158;
+            transition: background 0.2s;
+        }
+
+        .status-dot.loading {
+            background: #ff9f0a;
+            animation: pulse 1.2s infinite;
+        }
+
+        .status-dot.error {
+            background: #ff453a;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ===== CATEGORY NAV ===== */
+        .category-nav {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 100px;
+            padding: 5px;
+            width: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .category-tab {
+            background: transparent;
+            border: none;
+            border-radius: 100px;
+            padding: 9px 22px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: #98989d;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            white-space: nowrap;
+        }
+
+        .category-tab:hover { color: #f5f5f7; }
+
+        .category-tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== MODE SELECTOR ===== */
+        .mode-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+            align-items: center;
+        }
+
+        .mode-chip {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 100px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: #f5f5f7;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .mode-chip:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(10, 132, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .mode-chip.active {
+            background: #0a84ff;
+            border-color: #0a84ff;
+            color: white;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
+        }
+
+        .mode-chip .emoji { margin-right: 6px; }
+
+        /* ===== THE SAFE ===== */
+        .safe-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 214, 10, 0.1);
+            border: 1px solid rgba(255, 214, 10, 0.2);
+            border-radius: 100px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: #ffd60a;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-left: auto;
+        }
+
+        .safe-btn:hover {
+            background: rgba(255, 214, 10, 0.2);
+            border-color: rgba(255, 214, 10, 0.35);
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(255, 214, 10, 0.15);
+        }
+
+        .safe-btn:active { transform: scale(0.98); }
+
+        .safe-btn.open {
+            background: #ffd60a;
+            color: #1c1c1e;
+            border-color: #ffd60a;
+        }
+
+        .safe-btn .emoji { font-size: 16px; line-height: 1; }
+        .safe-btn.hidden { display: none; }
+
+        /* ===== SEARCH BAR ===== */
+        .search-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            width: 100%;
+            transition: all 0.3s ease;
+            opacity: 1;
+        }
+
+        .search-row.hidden { display: none; }
+
+        .search-input-wrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 52px 16px 22px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
+            font-family: 'Inter', sans-serif;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            color: #f5f5f7;
+            outline: none;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .search-input:focus {
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-input::placeholder { color: #636366; font-weight: 400; }
+
+        .clear-btn {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #98989d;
+            font-size: 14px;
+            transition: all 0.15s;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .clear-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #f5f5f7;
+        }
+
+        /* ===== CONTROLS ROW ===== */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .count-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .count-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #98989d;
+            letter-spacing: -0.01em;
+            margin-right: 4px;
+        }
+
+        .count-chip {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 100px;
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #f5f5f7;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .count-chip:hover { background: rgba(255, 255, 255, 0.12); }
+
+        .count-chip.active {
+            background: #0a84ff;
+            border-color: #0a84ff;
+            color: white;
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+        }
+
+        .count-selector.hidden { display: none; }
+
+        .refresh-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 100px;
+            padding: 10px 22px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: #0a84ff;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(10, 132, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .refresh-btn:active { transform: scale(0.98); }
+
+        .refresh-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s;
+        }
+
+        .refresh-btn:hover svg { transform: rotate(90deg); }
+
+        /* ===== RESULTS AREA ===== */
+        .results-area {
+            min-height: 200px;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Single column, wide cards (matches reference layout) */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 1200px) {
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+            }
+        }
+
+        .results-grid.single {
+            grid-template-columns: 1fr;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           UNIFIED CARD — matches reference image
+           [thumb]  [name / author / badges / song / id / link]  [stats 3-col]
+           ============================================================ */
+        .level-card,
+        .demon-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow:
+                0 2px 10px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: cardAppear 0.35s cubic-bezier(0.2, 0, 0, 1);
+            position: relative;
+            min-width: 0;
+        }
+
+        .level-card:hover,
+        .demon-card:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 10px 20px -8px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.07) inset;
+            border-color: rgba(10, 132, 255, 0.18);
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* --- Three-column layout: thumb | meta | stats --- */
+        .level-card-layout,
+        .demon-card-layout {
+            display: grid;
+            grid-template-columns: 160px minmax(180px, 1.1fr) minmax(220px, 2fr);
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        /* --- LEFT: Thumbnail --- */
+        .level-thumb-wrap,
+        .demon-thumb-wrap {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .level-thumb-wrap.no-thumb,
+        .demon-thumb-wrap.no-thumb {
+            background: linear-gradient(135deg, #3a3a3c, #2c2c2e);
+        }
+
+        .level-thumb-wrap.no-thumb::after {
+            content: '🎮';
+            font-size: 44px;
+            opacity: 0.4;
+        }
+
+        .demon-thumb-wrap.no-thumb::after {
+            content: '💀';
+            font-size: 44px;
+            opacity: 0.5;
+        }
+
+        .level-thumb,
+        .demon-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .level-card:hover .level-thumb,
+        .demon-card:hover .demon-thumb {
+            transform: scale(1.05);
+        }
+
+        /* Demon rank overlay */
+        .demon-rank-overlay {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            pointer-events: none;
+        }
+
+        .demon-rank-mini {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #1c1c1e;
+            background: linear-gradient(180deg, #ffd60a, #ff9f0a);
+            padding: 4px 10px;
+            border-radius: 100px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .demon-rank-mini.top30 {
+            background: linear-gradient(180deg, #e5e5ea, #aeaeb2);
+        }
+
+        .demon-rank-mini.top50 {
+            background: linear-gradient(180deg, #d99c6b, #a0522d);
+            color: #ffffff;
+        }
+
+        /* --- MIDDLE: Name / Author / Badges / Song / ID / Link --- */
+        .level-info,
+        .demon-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .level-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: #ffffff;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-word;
+        }
+
+        .level-name .emoji {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .level-author {
+            font-size: 14px;
+            font-weight: 500;
+            color: #0a84ff;
+            letter-spacing: -0.01em;
+            word-break: break-word;
+        }
+
+        /* Badges row */
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 2px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 100px;
+            line-height: 1.3;
+        }
+
+        .badge.featured {
+            color: #ffd60a;
+            background: rgba(255, 214, 10, 0.12);
+            border: 1px solid rgba(255, 214, 10, 0.25);
+        }
+
+        .badge.epic {
+            color: #bf5af2;
+            background: rgba(191, 90, 242, 0.12);
+            border: 1px solid rgba(191, 90, 242, 0.25);
+        }
+
+        .badge.demon {
+            color: #ff453a;
+            background: rgba(255, 69, 58, 0.12);
+            border: 1px solid rgba(255, 69, 58, 0.25);
+        }
+
+        .badge.rated {
+            color: #30d158;
+            background: rgba(48, 209, 88, 0.12);
+            border: 1px solid rgba(48, 209, 88, 0.25);
+        }
+
+        .badge.two-player {
+            color: #64d2ff;
+            background: rgba(100, 210, 255, 0.12);
+            border: 1px solid rgba(100, 210, 255, 0.25);
+        }
+
+        .badge.xl {
+            color: #64d2ff;
+            background: rgba(100, 210, 255, 0.12);
+            border: 1px solid rgba(100, 210, 255, 0.25);
+        }
+
+        /* Song line */
+        .level-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #8e8e93;
+            letter-spacing: -0.01em;
+            margin-top: 2px;
+        }
+
+        .level-stats span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ID badge */
+        .level-id-badge {
+            font-size: 11px;
+            font-weight: 500;
+            color: #8e8e93;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 100px;
+            letter-spacing: -0.01em;
+            display: inline-block;
+            width: fit-content;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Open link */
+        .level-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0a84ff;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 100px;
+            background: rgba(10, 132, 255, 0.12);
+            transition: all 0.2s;
+            width: fit-content;
+            letter-spacing: -0.01em;
+            margin-top: auto;
+        }
+
+        .level-link:hover {
+            background: rgba(10, 132, 255, 0.2);
+            transform: translateX(2px);
+        }
+
+        .level-link svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+        }
+
+        /* Demon people row */
+        .demon-people {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #8e8e93;
+            letter-spacing: -0.01em;
+        }
+
+        .demon-people span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .demon-people .name {
+            color: #f5f5f7;
+            font-weight: 600;
+        }
+
+        .demon-people .name.banned {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        /* Demon action buttons */
+        .demon-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        .demon-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 100px;
+            transition: all 0.2s;
+            letter-spacing: -0.01em;
+        }
+
+        .demon-action-btn.video {
+            color: #ff453a;
+            background: rgba(255, 69, 58, 0.12);
+        }
+
+        .demon-action-btn.video:hover {
+            background: rgba(255, 69, 58, 0.2);
+        }
+
+        .demon-action-btn.gd {
+            color: #0a84ff;
+            background: rgba(10, 132, 255, 0.12);
+        }
+
+        .demon-action-btn.gd:hover {
+            background: rgba(10, 132, 255, 0.2);
+        }
+
+        .demon-action-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* --- RIGHT: Stats grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-auto-rows: 1fr;
+            gap: 8px;
+            align-self: start;
+        }
+
+        .stat-tile {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+            transition: all 0.2s;
+        }
+
+        .stat-tile:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-tile .stat-icon {
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .stat-tile .stat-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #8e8e93;
+            line-height: 1.2;
+        }
+
+        .stat-tile .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            line-height: 1.15;
+            font-variant-numeric: tabular-nums;
+            word-break: break-word;
+        }
+
+        .stat-tile .stat-value.small {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-tile .stat-value.muted {
+            color: #98989d;
+            font-weight: 500;
+        }
+
+        /* ===== STATE MESSAGES ===== */
+        .state-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            text-align: center;
+            color: #98989d;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .state-message .emoji-big {
+            font-size: 48px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .state-message h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f5f5f7;
+            letter-spacing: -0.02em;
+        }
+
+        .state-message p {
+            font-size: 15px;
+            font-weight: 400;
+            color: #98989d;
+            max-width: 320px;
+            line-height: 1.45;
+            letter-spacing: -0.01em;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(10, 132, 255, 0.2);
+            border-top-color: #0a84ff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== FOOTER ===== */
+        .footer-meta {
+            margin-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 400;
+            color: #636366;
+            letter-spacing: -0.01em;
+        }
+
+        .footer-meta .api-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+
+        @media (max-width: 1024px) {
+            .app { padding: 28px 28px 40px; }
+
+            .level-card-layout,
+            .demon-card-layout {
+                grid-template-columns: 140px minmax(160px, 1fr) minmax(200px, 1.5fr);
+                gap: 14px;
+            }
+
+            .level-thumb-wrap,
+            .demon-thumb-wrap {
+                width: 140px;
+                height: 140px;
+            }
+        }
+
+        @media (max-width: 820px) {
+            .app { padding: 24px 22px 36px; }
+            .title-block h1 { font-size: 22px; }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            /* Below 720px, stack: thumb+meta on top row, stats full width below */
+            .level-card-layout,
+            .demon-card-layout {
+                grid-template-columns: 130px 1fr;
+                grid-template-areas:
+                    "thumb meta"
+                    "stats stats";
+                gap: 14px;
+            }
+
+            .level-thumb-wrap,
+            .demon-thumb-wrap {
+                grid-area: thumb;
+                width: 130px;
+                height: 130px;
+            }
+
+            .level-info,
+            .demon-info {
+                grid-area: meta;
+            }
+
+            .stats-grid {
+                grid-area: stats;
+                margin-top: 4px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app {
+                padding: 18px 14px calc(28px + env(safe-area-inset-bottom, 0px));
+                padding-top: calc(18px + env(safe-area-inset-top, 0px));
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .header-left { width: 100%; }
+
+            .icon-cube {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+            }
+
+            .icon-cube svg { width: 24px; height: 24px; }
+
+            .title-block h1 { font-size: 20px; white-space: normal; }
+            .title-block .sub { font-size: 12px; }
+
+            .status-pill {
+                padding: 6px 14px;
+                font-size: 12px;
+                align-self: flex-start;
+            }
+
+            .category-nav { width: 100%; justify-content: center; }
+            .category-tab {
+                padding: 9px 12px;
+                font-size: 13px;
+                flex: 1;
+                text-align: center;
+            }
+
+            .mode-selector {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 4px;
+                margin-left: -14px;
+                margin-right: -14px;
+                padding-left: 14px;
+                padding-right: 14px;
+                scroll-snap-type: x proximity;
+            }
+
+            .mode-selector::-webkit-scrollbar { display: none; }
+
+            .mode-chip {
+                padding: 9px 16px;
+                font-size: 14px;
+                flex-shrink: 0;
+                scroll-snap-align: start;
+            }
+
+            .safe-btn {
+                margin-left: 8px;
+                flex-shrink: 0;
+                padding: 9px 16px;
+                font-size: 14px;
+            }
+
+            .search-input {
+                padding: 14px 46px 14px 18px;
+                font-size: 16px;
+            }
+
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .count-selector { justify-content: center; }
+
+            .refresh-btn {
+                justify-content: center;
+                width: 100%;
+                padding: 12px 18px;
+                font-size: 15px;
+            }
+
+            .level-card,
+            .demon-card {
+                padding: 12px;
+                border-radius: 20px;
+            }
+
+            .level-card-layout,
+            .demon-card-layout {
+                grid-template-columns: 110px 1fr;
+                gap: 12px;
+            }
+
+            .level-thumb-wrap,
+            .demon-thumb-wrap {
+                width: 110px;
+                height: 110px;
+            }
+
+            .level-name { font-size: 17px; }
+            .level-name .emoji { font-size: 17px; }
+            .level-author { font-size: 13px; }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+            }
+
+            .stat-tile {
+                padding: 8px 10px;
+                border-radius: 12px;
+            }
+
+            .stat-tile .stat-value { font-size: 14px; }
+            .stat-tile .stat-value.small { font-size: 12px; }
+            .stat-tile .stat-label { font-size: 8px; }
+
+            .footer-meta {
+                font-size: 11px;
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .level-card-layout,
+            .demon-card-layout {
+                grid-template-columns: 90px 1fr;
+                gap: 10px;
+            }
+
+            .level-thumb-wrap,
+            .demon-thumb-wrap {
+                width: 90px;
+                height: 90px;
+                border-radius: 14px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stat-tile { padding: 7px 9px; }
+            .stat-tile .stat-value { font-size: 13px; }
+            .stat-tile .stat-value.small { font-size: 11px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .level-card:hover,
+            .demon-card:hover { transform: none; }
+            .level-card:hover .level-thumb,
+            .demon-card:hover .demon-thumb { transform: none; }
+            .refresh-btn:hover svg { transform: none; }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="app-inner">
+            <!-- header -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="icon-cube">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="title-block">
+                        <h1>🎮 GD Browser Explorer</h1>
+                        <div class="sub">Explore Geometry Dash · live data</div>
+                    </div>
+                </div>
+                <div class="status-pill" id="statusPill">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Connected</span>
+                </div>
+            </div>
+
+            <!-- category navigation -->
+            <div class="category-nav" id="categoryNav">
+                <button class="category-tab active" data-category="levels">Levels</button>
+                <button class="category-tab" data-category="events">Events</button>
+                <button class="category-tab" data-category="demonlist">Demonlist</button>
+            </div>
+
+            <!-- mode selector (levels) -->
+            <div class="mode-selector" id="levelModes">
+                <button class="mode-chip active" data-mode="awarded"><span class="emoji">⭐</span> Awarded</button>
+                <button class="mode-chip" data-mode="featured"><span class="emoji">🌟</span> Featured</button>
+                <button class="mode-chip" data-mode="trending"><span class="emoji">🔥</span> Trending</button>
+                <button class="mode-chip" data-mode="recent"><span class="emoji">🆕</span> Recent</button>
+                <button class="mode-chip" data-mode="top"><span class="emoji">👑</span> Top</button>
+                <button class="mode-chip" data-mode="mostDownloaded"><span class="emoji">🎯</span> Most Downloaded</button>
+                <button class="mode-chip" data-mode="hallOfFame"><span class="emoji">🏆</span> Hall of Fame</button>
+                <button class="mode-chip" data-mode="search"><span class="emoji">🎮</span> Search</button>
+            </div>
+
+            <!-- mode selector (events) -->
+            <div class="mode-selector hidden" id="eventModes">
+                <button class="mode-chip active" data-mode="daily"><span class="emoji">🎉</span> Daily</button>
+                <button class="mode-chip" data-mode="weekly"><span class="emoji">📅</span> Weekly</button>
+                <button class="mode-chip" data-mode="event"><span class="emoji">🗓️</span> Event</button>
+                <button class="safe-btn" id="safeBtn" data-open="false">
+                    <span class="emoji">🔓</span>
+                    <span class="label">The Safe</span>
+                </button>
+            </div>
+
+            <!-- mode selector (demonlist) -->
+            <div class="mode-selector hidden" id="demonlistModes">
+                <button class="mode-chip active" data-mode="demonlist"><span class="emoji">😈</span> Top 50 Demons</button>
+            </div>
+
+            <!-- search bar -->
+            <div class="search-row hidden" id="searchRow">
+                <div class="search-input-wrapper">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search levels by name or creator..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+                    <button class="clear-btn" id="clearSearchBtn" aria-label="Clear search">✕</button>
+                </div>
+            </div>
+
+            <!-- controls row -->
+            <div class="controls-row">
+                <div class="count-selector" id="countSelector">
+                    <span class="count-label">Show:</span>
+                    <button class="count-chip" data-count="1">1</button>
+                    <button class="count-chip active" data-count="5">5</button>
+                    <button class="count-chip" data-count="10">10</button>
+                    <button class="count-chip" data-count="20">20</button>
+                </div>
+                <button class="refresh-btn" id="refreshBtn">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <!-- results -->
+            <div class="results-area" id="resultsArea"></div>
+
+            <!-- footer -->
+            <div class="footer-meta">
+                <span class="api-badge">⚡️ GDBrowser + Pointercrate + levelthumbs</span>
+                <span id="lastUpdated"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  GD BROWSER EXPLORER — Card layout: thumb | meta | stats
+        //  GDBrowser API + Pointercrate API + levelthumbs
+        // ============================================================
+
+        const GDBROWSER_BASE = 'https://gdbrowser.com/api';
+        const POINTERCRATE_BASE = 'https://pointercrate.com/api';
+        const LEVELTHUMBS_BASE = 'https://levelthumbs.prevter.me/thumbnail';
+
+        const GDBROWSER_MODES = {
+            awarded:        { label: 'Awarded',         emoji: '⭐',  type: 11 },
+            featured:       { label: 'Featured',        emoji: '🌟',  type: 6 },
+            trending:       { label: 'Trending',        emoji: '🔥',  type: 3 },
+            recent:         { label: 'Recent',          emoji: '🆕',  type: 4 },
+            top:            { label: 'Top',             emoji: '👑',  type: 2 },
+            mostDownloaded: { label: 'Most Downloaded', emoji: '🎯',  type: 1 },
+            hallOfFame:     { label: 'Hall of Fame',    emoji: '🏆',  type: 16 },
+            search:         { label: 'Search',          emoji: '🎮',  type: 0, needsQuery: true },
+            daily:  { label: 'Daily',  emoji: '🎉', type: 21, single: true, historyType: 21 },
+            weekly: { label: 'Weekly', emoji: '📅', type: 22, single: true, historyType: 22 },
+            event:  { label: 'Event',  emoji: '🗓️', type: 23, single: true, historyType: 23 },
+        };
+
+        const POINTERCRATE_MODES = {
+            demonlist: { label: 'Top 50 Demons', emoji: '😈', pointercrate: true },
+        };
+
+        const ALL_MODES = { ...GDBROWSER_MODES, ...POINTERCRATE_MODES };
+
+        const CATEGORIES = {
+            levels:    { modes: ['awarded', 'featured', 'trending', 'recent', 'top', 'mostDownloaded', 'hallOfFame', 'search'] },
+            events:    { modes: ['daily', 'weekly', 'event'] },
+            demonlist: { modes: ['demonlist'] },
+        };
+
+        let currentCategory = 'levels';
+        let currentMode = 'awarded';
+        let currentCount = 5;
+        let currentQuery = '';
+        let safeOpen = false;
+        let cachedResults = null;
+        let cachedMode = null;
+        let cachedCount = null;
+        let cachedQuery = null;
+        let cachedSafe = null;
+        let isLoading = false;
+
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const categoryNav = document.getElementById('categoryNav');
+        const levelModes = document.getElementById('levelModes');
+        const eventModes = document.getElementById('eventModes');
+        const demonlistModes = document.getElementById('demonlistModes');
+        const safeBtn = document.getElementById('safeBtn');
+        const searchRow = document.getElementById('searchRow');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const countSelector = document.getElementById('countSelector');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const resultsArea = document.getElementById('resultsArea');
+        const lastUpdated = document.getElementById('lastUpdated');
+
+        function setStatus(state) {
+            statusDot.className = 'status-dot';
+            if (state === 'loading') {
+                statusDot.classList.add('loading');
+                statusText.textContent = 'Loading';
+            } else if (state === 'error') {
+                statusDot.classList.add('error');
+                statusText.textContent = 'Error';
+            } else {
+                statusText.textContent = 'Connected';
+            }
+        }
+
+        function buildApiUrl(mode, count, query) {
+            const modeDef = ALL_MODES[mode];
+            if (!modeDef) throw new Error('Unknown mode: ' + mode);
+
+            if (modeDef.pointercrate) {
+                return `${POINTERCRATE_BASE}/v2/demons/listed/`;
+            }
+
+            const searchQuery = (modeDef.needsQuery && query) ? encodeURIComponent(query) : '*';
+            const params = new URLSearchParams();
+
+            if (modeDef.single && !safeOpen) {
+                params.set('type', modeDef.type);
+                params.set('count', '1');
+            } else {
+                params.set('type', modeDef.historyType ?? modeDef.type);
+                params.set('count', String(count));
+            }
+
+            return `${GDBROWSER_BASE}/search/${searchQuery}?${params.toString()}`;
+        }
+
+        async function fetchLevels(mode, count, query) {
+            const modeDef = ALL_MODES[mode];
+            const url = buildApiUrl(mode, count, query);
+            console.log('[GD Explorer] Fetching:', url);
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`API responded with ${response.status}`);
+
+            let data = await response.json();
+            if (data === -1 || data === null) throw new Error('API returned no data.');
+
+            if (modeDef.pointercrate && Array.isArray(data)) {
+                data = data.slice(0, count);
+            }
+            if (modeDef.single && !safeOpen && Array.isArray(data) && data.length > 0) {
+                data = data.slice(0, 1);
+            }
+
+            return data;
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            if (loading) {
+                setStatus('loading');
+                refreshBtn.disabled = true;
+                refreshBtn.style.opacity = '0.5';
+            } else {
+                setStatus('connected');
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+            }
+        }
+
+        function showError(title, message) {
+            setStatus('error');
+            resultsArea.innerHTML = `
+                <div class="state-message">
+                    <div class="emoji-big">😕</div>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            lastUpdated.textContent = '';
+        }
+
+        function showEmptyState() {
+            resultsArea.innerHTML = `
+                <div class="state-message">
+                    <div class="emoji-big">🕹️</div>
+                    <h3>No results found</h3>
+                    <p>Try a different mode or adjust your search.</p>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function fmtNum(n) {
+            if (n === null || n === undefined) return '—';
+            if (typeof n !== 'number') return String(n);
+            return n.toLocaleString();
+        }
+
+        function levelThumbUrl(levelId) {
+            if (!levelId) return '';
+            return `${LEVELTHUMBS_BASE}/${encodeURIComponent(levelId)}`;
+        }
+
+        function statTile(icon, label, value, opts = {}) {
+            if (value === null || value === undefined || value === '' || value === '—') return '';
+            const cls = ['stat-value'];
+            if (opts.small) cls.push('small');
+            if (opts.muted) cls.push('muted');
+            return `
+                <div class="stat-tile">
+                    <span class="stat-icon">${icon}</span>
+                    <span class="stat-label">${label}</span>
+                    <span class="${cls.join(' ')}">${value}</span>
+                </div>
+            `;
+        }
+
+        // ===== LEVEL CARD (reference layout) =====
+        function renderLevelCard(level) {
+            const name = level.name || 'Unknown Level';
+            const author = level.author || 'Unknown Creator';
+            const id = level.id || '';
+            const stars = level.stars ?? 0;
+            const difficulty = level.difficulty || '';
+            const downloads = level.downloads ?? 0;
+            const likes = level.likes ?? 0;
+            const featured = level.featured;
+            const epic = level.epic;
+            const rated = level.rated;
+            const twoPlayer = level.twoPlayer;
+            const length = level.length || '';
+            const objects = level.objects ?? 0;
+            const coins = level.coins;
+            const verifiedCoins = level.coinsVerified;
+            const songName = level.songName || '';
+            const songAuthor = level.songAuthor || '';
+            const songID = level.songID || '';
+            const demon = level.demon;
+            const demonDiff = level.demonDifficulty;
+            const large = level.large;
+
+            let diffText = difficulty;
+            if (demonDiff) {
+                const demonMap = {
+                    3: 'Easy Demon', 4: 'Medium Demon', 0: 'Hard Demon',
+                    5: 'Insane Demon', 6: 'Extreme Demon'
+                };
+                diffText = demonMap[demonDiff] || 'Demon';
+            }
+
+            let levelEmoji = '🎮';
+            if (demon && demonDiff === 6) levelEmoji = '💀';
+            else if (demon) levelEmoji = '😈';
+            else if (featured) levelEmoji = '🌟';
+            else if (epic) levelEmoji = '💎';
+
+            // Stats order — matches reference: Stars, Difficulty, Downloads / Likes, Objects, Length / Song ID
+            const stats = [
+                stars > 0 ? statTile('⭐', 'Stars', String(stars)) : '',
+                diffText ? statTile('🎯', 'Difficulty', diffText, { small: true }) : '',
+                downloads > 0 ? statTile('📥', 'Downloads', fmtNum(downloads)) : '',
+                likes > 0 ? statTile('❤️', 'Likes', fmtNum(likes)) : '',
+                objects > 0 ? statTile('🧩', 'Objects', fmtNum(objects)) : '',
+                length ? statTile('📏', 'Length', length, { small: true }) : '',
+                coins ? statTile('🪙', 'Coins', `${verifiedCoins ?? 0}/${coins}`) : '',
+                songID ? statTile('🎵', 'Song ID', String(songID), { small: true, muted: true }) : '',
+            ].filter(Boolean).join('');
+
+            const badges = [];
+            if (featured) badges.push('<span class="badge featured">🌟 Featured</span>');
+            if (epic) badges.push('<span class="badge epic">💎 Epic</span>');
+            if (demon) badges.push('<span class="badge demon">😈 Demon</span>');
+            if (rated) badges.push('<span class="badge rated">⭐ Rated</span>');
+            if (twoPlayer) badges.push('<span class="badge two-player">👥 2P</span>');
+            if (large) badges.push('<span class="badge xl">⬛ XL</span>');
+
+            const songLine = songName
+                ? `<div class="level-stats"><span>♪ ${escapeHtml(songName)}${songAuthor ? ' · ' + escapeHtml(songAuthor) : ''}</span></div>`
+                : '';
+
+            const thumbUrl = levelThumbUrl(id);
+            const thumbHtml = thumbUrl
+                ? `<div class="level-thumb-wrap">
+                       <img class="level-thumb"
+                            src="${thumbUrl}"
+                            alt=""
+                            loading="lazy"
+                            onerror="this.parentElement.classList.add('no-thumb'); this.remove();">
+                   </div>`
+                : `<div class="level-thumb-wrap no-thumb"></div>`;
+
+            return `
+                <div class="level-card">
+                    <div class="level-card-layout">
+                        ${thumbHtml}
+                        <div class="level-info">
+                            <div class="level-name">
+                                <span class="emoji">${levelEmoji}</span>
+                                ${escapeHtml(name)}
+                            </div>
+                            <div class="level-author">by ${escapeHtml(author)}</div>
+                            ${badges.length ? `<div class="badges-row">${badges.join('')}</div>` : ''}
+                            ${songLine}
+                            ${id ? `<div class="level-id-badge">ID ${id}</div>` : ''}
+                            ${id ? `<a class="level-link" href="https://gdbrowser.com/${id}" target="_blank" rel="noopener">
+                                <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                                Open in GDBrowser
+                            </a>` : ''}
+                        </div>
+                        ${stats ? `<div class="stats-grid">${stats}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== DEMON CARD (same layout) =====
+        function renderDemonCard(demon) {
+            const name = demon.name || 'Unknown Demon';
+            const position = demon.position ?? '?';
+            const video = demon.video || '';
+            const thumbnail = demon.thumbnail || '';
+            const publisher = demon.publisher?.name || 'Unknown';
+            const publisherBanned = demon.publisher?.banned;
+            const verifier = demon.verifier?.name || 'Unknown';
+            const verifierBanned = demon.verifier?.banned;
+            const levelId = demon.level_id || '';
+
+            let posClass = '';
+            if (position <= 10) posClass = '';
+            else if (position <= 30) posClass = 'top30';
+            else posClass = 'top50';
+
+            const thumbHtml = thumbnail
+                ? `<img class="demon-thumb" src="${escapeHtml(thumbnail)}" alt="" loading="lazy"
+                        onerror="this.style.display='none'; this.parentElement.classList.add('no-thumb');">`
+                : '';
+
+            // Demon stats: rank, requirement, ID
+            const stats = [
+                statTile('🏆', 'Rank', `#${position}`),
+                demon.requirement ? statTile('🎯', 'Required', `${demon.requirement}%`) : '',
+                levelId ? statTile('🆔', 'Level ID', String(levelId), { small: true, muted: true }) : '',
+            ].filter(Boolean).join('');
+
+            return `
+                <div class="demon-card">
+                    <div class="demon-card-layout">
+                        <div class="demon-thumb-wrap ${thumbnail ? '' : 'no-thumb'}">
+                            ${thumbHtml}
+                            <div class="demon-rank-overlay">
+                                <span class="demon-rank-mini ${posClass}">#${position}</span>
+                            </div>
+                        </div>
+                        <div class="demon-info">
+                            <div class="level-name">
+                                <span class="emoji">💀</span>
+                                ${escapeHtml(name)}
+                            </div>
+                            <div class="demon-people">
+                                <span>📤 <span class="name ${publisherBanned ? 'banned' : ''}">${escapeHtml(publisher)}</span></span>
+                                <span>✅ <span class="name ${verifierBanned ? 'banned' : ''}">${escapeHtml(verifier)}</span></span>
+                            </div>
+                            <div class="demon-actions">
+                                ${video ? `<a class="demon-action-btn video" href="${escapeHtml(video)}" target="_blank" rel="noopener">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                    Video
+                                </a>` : ''}
+                                ${levelId ? `<a class="demon-action-btn gd" href="https://gdbrowser.com/${levelId}" target="_blank" rel="noopener">
+                                    <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                                    GD
+                                </a>` : ''}
+                            </div>
+                        </div>
+                        ${stats ? `<div class="stats-grid">${stats}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLevels(levels) {
+            if (!levels || !Array.isArray(levels) || levels.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            const modeDef = ALL_MODES[currentMode];
+            const isPointercrate = !!modeDef?.pointercrate;
+            const isSingle = !!modeDef?.single && !safeOpen;
+
+            let cardsHtml;
+            if (isPointercrate) {
+                cardsHtml = levels.map(d => renderDemonCard(d)).join('');
+            } else {
+                cardsHtml = levels.map(l => renderLevelCard(l)).join('');
+            }
+
+            const gridClass = (isSingle || levels.length === 1) ? 'results-grid single' : 'results-grid';
+            resultsArea.innerHTML = `<div class="${gridClass}">${cardsHtml}</div>`;
+
+            const now = new Date();
+            lastUpdated.textContent = `Updated ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        }
+
+        async function loadLevels(forceRefresh = false) {
+            if (isLoading) return;
+
+            if (!forceRefresh &&
+                cachedResults &&
+                cachedMode === currentMode &&
+                cachedCount === currentCount &&
+                cachedQuery === currentQuery &&
+                cachedSafe === safeOpen) {
+                renderLevels(cachedResults);
+                setStatus('connected');
+                return;
+            }
+
+            setLoading(true);
+            resultsArea.innerHTML = `
+                <div class="state-message">
+                    <div class="spinner"></div>
+                    <p>Fetching…</p>
+                </div>
+            `;
+
+            try {
+                const levels = await fetchLevels(currentMode, currentCount, currentQuery);
+                cachedResults = levels;
+                cachedMode = currentMode;
+                cachedCount = currentCount;
+                cachedQuery = currentQuery;
+                cachedSafe = safeOpen;
+                renderLevels(levels);
+            } catch (err) {
+                console.error('[GD Explorer]', err);
+                if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                    showError('Couldn\'t reach the API', 'Check your connection and try again.');
+                } else if (err.message.includes('no data')) {
+                    showError('No results found', 'The API returned no data for this mode.');
+                } else {
+                    showError('Something went wrong', 'The API might be unavailable. Please try again.');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function updateCountSelectorVisibility() {
+            const modeDef = ALL_MODES[currentMode];
+            const hideCount = !!modeDef?.single && !safeOpen;
+            countSelector.classList.toggle('hidden', hideCount);
+        }
+
+        function updateSafeButton() {
+            const emoji = safeBtn.querySelector('.emoji');
+            const label = safeBtn.querySelector('.label');
+            safeBtn.classList.toggle('hidden', currentCategory !== 'events');
+            if (safeOpen) {
+                emoji.textContent = '🔒';
+                label.textContent = 'Close Safe';
+                safeBtn.classList.add('open');
+                safeBtn.dataset.open = 'true';
+            } else {
+                emoji.textContent = '🔓';
+                label.textContent = 'The Safe';
+                safeBtn.classList.remove('open');
+                safeBtn.dataset.open = 'false';
+            }
+        }
+
+        function switchCategory(category) {
+            currentCategory = category;
+
+            categoryNav.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.category === category);
+            });
+
+            levelModes.classList.toggle('hidden', category !== 'levels');
+            eventModes.classList.toggle('hidden', category !== 'events');
+            demonlistModes.classList.toggle('hidden', category !== 'demonlist');
+
+            searchRow.classList.add('hidden');
+            currentQuery = '';
+            searchInput.value = '';
+            clearSearchBtn.classList.remove('visible');
+
+            if (category !== 'events') safeOpen = false;
+
+            const defaultMode = CATEGORIES[category].modes[0];
+            currentMode = defaultMode;
+
+            const visibleSelector = category === 'levels' ? levelModes
+                                : category === 'events' ? eventModes
+                                : demonlistModes;
+            visibleSelector.querySelectorAll('.mode-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.mode === defaultMode);
+            });
+
+            updateSafeButton();
+            updateCountSelectorVisibility();
+            loadLevels(true);
+        }
+
+        function init() {
+            categoryNav.addEventListener('click', (e) => {
+                const tab = e.target.closest('.category-tab');
+                if (!tab) return;
+                if (tab.dataset.category === currentCategory) return;
+                switchCategory(tab.dataset.category);
+            });
+
+            [levelModes, demonlistModes].forEach(selector => {
+                selector.addEventListener('click', (e) => {
+                    const chip = e.target.closest('.mode-chip');
+                    if (!chip) return;
+                    const mode = chip.dataset.mode;
+                    if (mode === currentMode) return;
+
+                    selector.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentMode = mode;
+
+                    if (ALL_MODES[mode]?.needsQuery) {
+                        searchRow.classList.remove('hidden');
+                        searchInput.focus();
+                    } else {
+                        searchRow.classList.add('hidden');
+                        currentQuery = '';
+                        searchInput.value = '';
+                        clearSearchBtn.classList.remove('visible');
+                    }
+
+                    updateCountSelectorVisibility();
+                    loadLevels();
+                });
+            });
+
+            eventModes.addEventListener('click', (e) => {
+                if (e.target.closest('#safeBtn')) {
+                    safeOpen = !safeOpen;
+                    updateSafeButton();
+                    updateCountSelectorVisibility();
+                    loadLevels(true);
+                    return;
+                }
+                const chip = e.target.closest('.mode-chip');
+                if (!chip) return;
+                if (chip.dataset.mode === currentMode) return;
+                eventModes.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentMode = chip.dataset.mode;
+                updateCountSelectorVisibility();
+                loadLevels(true);
+            });
+
+            countSelector.addEventListener('click', (e) => {
+                const chip = e.target.closest('.count-chip');
+                if (!chip) return;
+                countSelector.querySelectorAll('.count-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentCount = parseInt(chip.dataset.count, 10);
+                loadLevels();
+            });
+
+            refreshBtn.addEventListener('click', () => loadLevels(true));
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const q = searchInput.value.trim();
+                    if (q) {
+                        currentQuery = q;
+                        loadLevels(true);
+                    }
+                }
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                currentQuery = '';
+                clearSearchBtn.classList.remove('visible');
+                if (currentMode === 'search') loadLevels();
+            });
+
+            searchInput.addEventListener('input', () => {
+                clearSearchBtn.classList.toggle('visible', searchInput.value.length > 0);
+            });
+
+            updateSafeButton();
+            updateCountSelectorVisibility();
+            loadLevels();
+        }
+
+        init();
+    </script>
+</body>
+</html>
